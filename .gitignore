@@ -1,0 +1,9 @@
+# PyCharm
+
+*.py[co]
+test.py
+MANIFEST
+.converage
+.tox/
+.cache/
+*.egg-info/
