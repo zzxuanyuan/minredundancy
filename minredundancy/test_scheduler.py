@@ -29,16 +29,18 @@ for index, job_info in df_resource.iterrows():
 pdf_dict = dict()
 pdf_fitter = PDF_Fitter(file_name)
 pdf = pdf_fitter.fit(resource_name)
+print "pdf shape = ", pdf.shape
 
 plt.clf()
 df_name = df[df['ResourceNames']==resource_name]
 x_max = np.max(df_name['Duration'])
+print "x_max = ", x_max
 x = range(0, x_max)
-#pd.Series(pdf, x).plot()
-#plt.show()
+pd.Series(pdf, x).plot()
+plt.show()
 
 pdf_dict[resource_name] = pdf
-matching_algorithm = "1copy"
+matching_algorithm = sys.argv[3]
 scheduler = Scheduler(job_dict, pdf_dict, interval_tree, matching_algorithm)
 
 start_minute = np.min(df_name['DesktopStartDateMinute'])
@@ -46,15 +48,15 @@ end_minute = np.max(df_name['DesktopEndDateMinute'])
 range_minute = end_minute - start_minute
 
 loss_rate_list = []
-for run in range(100):
+for run in range(1):
 	data_loss = 0
 	data_count = 100
 	data_iterated = 0
-	lease_period = 100
+	lease_period = int(sys.argv[4])
 	desired_availability = float(sys.argv[2])
 	iteration = 0
 	bad_iteration = 0
-	while iteration < 100:
+	while iteration < 10:
 		quantile = int(range_minute * 0.05)
 #		print "quantile is : ", quantile
 		time_point = random.randint(start_minute+quantile, end_minute-quantile)
@@ -90,7 +92,7 @@ print loss_rate_list
 
 resource_dict = {'SU-OG-CE':'suogce', 'GLOW':'glow', 'MWT2':'mwt2'}
 avail_dict = {'0.99':'099', '0.90':'090', '0.80':'080'}
-file_name = resource_dict[sys.argv[1]] + '_avail_' + avail_dict[sys.argv[2]] + '.txt'
+file_name = resource_dict[sys.argv[1]] + '_avail_' + avail_dict[sys.argv[2]] + '_replication_' + sys.argv[3] + '_lease_' + sys.argv[4] + '.txt'
 print file_name
 with open(file_name, 'wb') as fp:
 	pickle.dump(loss_rate_list, fp)
