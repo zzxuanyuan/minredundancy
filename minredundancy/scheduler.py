@@ -12,23 +12,40 @@ class Scheduler:
 
 	def schedule(self, time_point, lease_period, availability_dict):
 		job_list = self.interval_tree[time_point]
-		print "time_point = ", time_point
-		print "job_list = ", job_list
+#		print "time_point = ", time_point
+#		print "job_list = ", job_list
 		failure_rate_dict = {}
 		for job in job_list:
 			job_id = job[2]
-			job_info = self.job_dict[job_id]
-			failure_rate_dict[job_id] = self._to_failure_rate(job_info, time_point, lease_period)
+			job_start_time = job[0]
+			job_end_time = job[1]
+			# search for the right job_id in job_dict[job_id] list.
+			job_info = None
+			found = False
+			for j in self.job_dict[job_id]:
+				start_time = int(j['DesktopStartDateMinute'])	
+				end_time = int(j['DesktopEndDateMinute'])
+				if start_time == job_start_time and end_time == job_end_time:
+					job_info = j
+					found = True
+					break
+			if found == False:
+				print "Error: job info has not been found!"
+				print "job_id,job_start_time,job_end_time: ", job_id, job_start_time, job_end_time
+				for j in self.job_dict[job_id]:
+					"j = ", j
+			failure_rate_dict[job_id] = (job_start_time, job_end_time, self._to_failure_rate(job_info, time_point, lease_period))
 		# evalute sizes of data set and job set
 		acceptable_failure_rate_count = 0
 		for job in failure_rate_dict:
-			if failure_rate_dict[job] < 1.0:
+			if failure_rate_dict[job][2] < 1.0:
 				acceptable_failure_rate_count = acceptable_failure_rate_count + 1
 		if acceptable_failure_rate_count < len(availability_dict) * 3:
 			print "Error: there are less than 3 times of jobs that are acceptable"
 			return None
 
 		match_job_dict = self.negotiate(availability_dict, failure_rate_dict)
+#		print "match_job_dict = ", match_job_dict
 		return match_job_dict
 
 	def negotiate(self, availability_dict, failure_rate_dict):
@@ -53,15 +70,15 @@ class Scheduler:
 			if not failure_rate_dict:
 				return None
 			job_id, rate = failure_rate_dict.popitem()
-			job_list.append(job_id)
+			job_list.append((rate[0], rate[1], job_id))
 			if not failure_rate_dict:
 				return None
 			job_id, rate = failure_rate_dict.popitem()
-			job_list.append(job_id)
+			job_list.append((rate[0], rate[1], job_id))
 			if not failure_rate_dict:
 				return None
 			job_id, rate = failure_rate_dict.popitem()
-			job_list.append(job_id)
+			job_list.append((rate[0], rate[1], job_id))
 			match_job_dict[dataset] = job_list
 		return match_job_dict
 
@@ -72,11 +89,11 @@ class Scheduler:
 			if not failure_rate_dict:
 				return None
 			job_id, rate = failure_rate_dict.popitem()
-			job_list.append(job_id)
+			job_list.append((rate[0], rate[1], job_id))
 			if not failure_rate_dict:
 				return None
 			job_id, rate = failure_rate_dict.popitem()
-			job_list.append(job_id)
+			job_list.append((rate[0], rate[1], job_id))
 			match_job_dict[dataset] = job_list
 		return match_job_dict
 
@@ -87,7 +104,7 @@ class Scheduler:
 			if not failure_rate_dict:
 				return None
 			job_id, rate = failure_rate_dict.popitem()
-			job_list.append(job_id)
+			job_list.append((rate[0], rate[1], job_id))
 			match_job_dict[dataset] = job_list
 		return match_job_dict
 
@@ -97,13 +114,13 @@ class Scheduler:
 			required_availability = availability_dict[dataset]
 			find = False
 			for job_id in failure_rate_dict:
-				if failure_rate_dict[job_id] < 1.0 - required_availability:
+				if failure_rate_dict[job_id][2] < 1.0 - required_availability:
 					rate = failure_rate_dict.pop(job_id, None)
 					if rate == None:
 						print "Error: rate is None"
 						return None
 					find = True
-					match_job_dict[dataset] = [job_id]
+					match_job_dict[dataset] = (rate[0], rate[1], job_id)
 					break
 			if find == False:
 				print "Error: does not find a pilot job which meets required availability"
@@ -123,10 +140,11 @@ class Scheduler:
 				if not failure_rate_dict:
 					return None
 				job_id, rate = failure_rate_dict.popitem()
-				if rate >= 1.0:
+				if rate[2] >= 1.0:
+					print "Error: failure rate is larger than 1.0"
 					continue
-				job_list.append(job_id)
-				accu_failure_rate = accu_failure_rate * rate
+				job_list.append((rate[0], rate[1], job_id))
+				accu_failure_rate = accu_failure_rate * rate[2]
 				accu_availability = 1.0 - accu_failure_rate
 			match_job_dict[dataset] = job_list
 		return match_job_dict
@@ -142,6 +160,6 @@ class Scheduler:
 		p_nominator = np.sum(pdf[start_time:end_time])
 		p_denominator = np.sum(pdf[start_time:])
 		failure_rate = p_nominator/p_denominator
-		print "time_point, p_nominator,p_denominator,failure_rate,job_initial_time,start_time,end_time,job_id = ", time_point,p_nominator,p_denominator,failure_rate,job_initial_time,start_time,end_time,job_info['JobId']
+#		print "time_point, p_nominator,p_denominator,failure_rate,job_initial_time,start_time,end_time,job_id = ", time_point,p_nominator,p_denominator,failure_rate,job_initial_time,start_time,end_time,job_info['JobId']
 		return failure_rate
 
