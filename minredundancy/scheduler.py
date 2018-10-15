@@ -34,7 +34,13 @@ class Scheduler:
 				print "job_id,job_start_time,job_end_time: ", job_id, job_start_time, job_end_time
 				for j in self.job_dict[job_id]:
 					"j = ", j
-			failure_rate_dict[job_id] = (job_start_time, job_end_time, self._to_failure_rate(job_info, time_point, lease_period))
+			failure_rate = self._to_failure_rate(job_info, time_point, lease_period)
+			if failure_rate == 0.0:
+				print "Error: skip this failure rate"
+				continue
+			failure_rate_dict[job_id] = (job_start_time, job_end_time, failure_rate)
+		if len(failure_rate_dict) < 3 * len(availability_dict):
+			print "Error: valid job number is less than 3 times dataset number"
 		# evalute sizes of data set and job set
 		acceptable_failure_rate_count = 0
 		for job in failure_rate_dict:
@@ -120,7 +126,7 @@ class Scheduler:
 						print "Error: rate is None"
 						return None
 					find = True
-					match_job_dict[dataset] = (rate[0], rate[1], job_id)
+					match_job_dict[dataset] = [(rate[0], rate[1], job_id)]
 					break
 			if find == False:
 				print "Error: does not find a pilot job which meets required availability"
@@ -157,8 +163,15 @@ class Scheduler:
 		start_time = time_point - job_initial_time
 		end_time = start_time + release_period
 		# the integral of range [start_time, end_time); since the step = 1, so the area of integration is height which is represented by pdf[point] multiplied by length which is step size 1
-		p_nominator = np.sum(pdf[start_time:end_time])
-		p_denominator = np.sum(pdf[start_time:])
+#		p_nominator = np.sum(pdf[start_time:end_time])
+#		p_denominator = np.sum(pdf[start_time:])
+		start_time_seconds = start_time * 60
+		end_time_seconds = end_time * 60
+		if start_time_seconds >= len(pdf) or end_time_seconds >= len(pdf):
+			print "Error: start_time_seconds or end_time_seconds go beyond length of pdf(", start_time_seconds, end_time_seconds, len(pdf), ")"
+			return 0.0
+		p_nominator = np.sum(pdf[start_time_seconds:end_time_seconds])
+		p_denominator = np.sum(pdf[start_time_seconds:])
 		failure_rate = p_nominator/p_denominator
 #		print "time_point, p_nominator,p_denominator,failure_rate,job_initial_time,start_time,end_time,job_id = ", time_point,p_nominator,p_denominator,failure_rate,job_initial_time,start_time,end_time,job_info['JobId']
 		return failure_rate

@@ -19,10 +19,11 @@ pdf_fitter = PDF_Fitter(file_name)
 #availability_list = ['0.999', '0.99', '0.95', '0.90', '0.80', '0.70', '0.60', '0.50']
 #replication_list = ['fast', 'random1copy', 'random2copy', 'random3copy', '1copy']
 #lease_list = ['25', '50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '1000', '2000', '3000', '4000', '5000']
-resource_list = ['SU-OG-CE', 'GLOW', 'MWT2', 'SPRACE', 'CIT_CMS_T2', 'NIKHEF-ELPROD','UConn-OSG','AGLT2','SU-OG-CE1']
+#resource_list = ['SU-OG-CE', 'GLOW', 'SPRACE']
+resource_list = ['SU-OG-CE1', 'CIT_CMS_T2']
 availability_list = ['0.99', '0.95', '0.90', '0.80', '0.70', '0.60', '0.50']
-replication_list = ['fast', 'random1copy', 'random2copy', 'random3copy', '1copy']
-lease_list = ['25', '50', '100', '200', '400', '800', '1600', '3200']
+replication_list = ['fast', 'random1copy', 'random2copy', 'random3copy']
+lease_list = ['25', '50', '100', '200', '400', '800']
 
 def cal_loss_redundancy(resource, availability, replication, lease):
 	replication_count = 0

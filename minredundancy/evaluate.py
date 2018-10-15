@@ -17,6 +17,9 @@ class Evaluater:
 			data_job_set = set()
 			data_job_dict = {}
 			for tup in match_job_dict[data]:
+				if type(tup) is int:
+					print "data : ", data, "tup : ", tup
+					print match_job_dict
 				data_job_set.add(tup[2])
 				data_job_dict[tup[2]] = tup
 			intersect_set = data_job_set.intersection(tree_job_set)
