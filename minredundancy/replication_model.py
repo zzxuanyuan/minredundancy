@@ -20,10 +20,13 @@ pdf_fitter = PDF_Fitter(file_name)
 #replication_list = ['fast', 'random1copy', 'random2copy', 'random3copy', '1copy']
 #lease_list = ['25', '50', '100', '200', '300', '400', '500', '600', '700', '800', '900', '1000', '2000', '3000', '4000', '5000']
 #resource_list = ['SU-OG-CE', 'GLOW', 'SPRACE']
-resource_list = ['SU-OG-CE1', 'CIT_CMS_T2']
-availability_list = ['0.99', '0.95', '0.90', '0.80', '0.70', '0.60', '0.50']
-replication_list = ['fast', 'random1copy', 'random2copy', 'random3copy']
-lease_list = ['25', '50', '100', '200', '400', '800']
+resource_list = ['SU-OG-CE1', 'GLOW', 'SPRACE']
+#availability_list = ['0.99', '0.95', '0.90', '0.80', '0.70', '0.60', '0.50']
+availability_list = ['0.90']
+#replication_list = ['fast', 'random1copy', 'random2copy', 'random3copy', 'min1copy', 'min2copy', 'min3copy']
+replication_list = ['random1copy', 'min1copy', 'random2copy', 'min2copy', 'random3copy', 'min3copy']
+lease_list = ['100']
+#lease_list = ['25', '50', '100', '200', '400', '800']
 
 def cal_loss_redundancy(resource, availability, replication, lease):
 	replication_count = 0
@@ -34,12 +37,18 @@ def cal_loss_redundancy(resource, availability, replication, lease):
 	desired_availability = float(availability)
 	iteration = 0
 	bad_iteration = 0
+	if replication == 'random1copy' or replication == 'min1copy':
+		copy_number = 1
+	elif replication == 'random2copy' or replication == 'min2copy':
+		copy_number = 2
+	elif replication == 'random3copy' or replication == 'min3copy':
+		copy_number = 3
 	while iteration < 30:
 		quantile = int(range_minute * 0.05)
 		time_point = random.randint(start_minute+quantile, end_minute-quantile)
 		job_count = len(interval_tree[time_point])
 		# evaluate sizes of data set and job set
-		if job_count < data_count * 3:
+		if job_count < data_count * 3 * copy_number:
 #			print "Error : job set is less than 3 times of data set"
 			bad_iteration += 1
 			continue
@@ -62,6 +71,7 @@ def cal_loss_redundancy(resource, availability, replication, lease):
 	redundancy_rate = float(replication_count)/float(data_iterated)
 	print "data loss rate : ", data_loss_rate
 	print "redundancy : ", redundancy_rate
+	print "bad iteration : ", bad_iteration
 	return (data_loss_rate, redundancy_rate)
 
 result_dict = {}
@@ -101,13 +111,13 @@ for resource in resource_list:
 			scheduler = Scheduler(job_dict, pdf_dict, interval_tree, matching_algorithm)
 			for lease in lease_list:
 				name = resource + '_availability_' + availability + '_replication_' + replication + '_lease_' + lease
+				print "test name = ", name
 				value = cal_loss_redundancy(resource, availability, replication, lease)
 				result_dict[name] = value
 		fname = resource + '_' + availability + '.txt'
 		with open(fname, 'wb') as fp:
 			pickle.dump(result_dict, fp, protocol=pickle.HIGHEST_PROTOCOL)
 		fp.close()
-
 with open('replication_model_result.txt', 'wb') as fp:
 	pickle.dump(result_dict, fp, protocol=pickle.HIGHEST_PROTOCOL)
 fp.close()

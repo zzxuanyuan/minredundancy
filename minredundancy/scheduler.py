@@ -68,6 +68,12 @@ class Scheduler:
 			return self._do_random2copy_negotiate(availability_dict, failure_rate_dict)
 		elif algorithm == "random3copy":
 			return self._do_random3copy_negotiate(availability_dict, failure_rate_dict)
+		elif algorithm == "min1copy":
+			return self._do_min1copy_negotiate(availability_dict, failure_rate_dict)
+		elif algorithm == "min2copy":
+			return self._do_min2copy_negotiate(availability_dict, failure_rate_dict)
+		elif algorithm == "min3copy":
+			return self._do_min3copy_negotiate(availability_dict, failure_rate_dict)
 
 	def _do_random3copy_negotiate(self, availability_dict, failure_rate_dict):
 		match_job_dict = {}
@@ -111,6 +117,78 @@ class Scheduler:
 				return None
 			job_id, rate = failure_rate_dict.popitem()
 			job_list.append((rate[0], rate[1], job_id))
+			match_job_dict[dataset] = job_list
+		return match_job_dict
+
+	def _do_min3copy_negotiate(self, availability_dict, failure_rate_dict):
+		match_job_dict = {}
+		sorted_failure_rate_list = sorted(failure_rate_dict.items(), key=lambda kv: kv[1][2])
+		for dataset in availability_dict:
+			job_list = []
+			if not sorted_failure_rate_list:
+				return None
+			item = sorted_failure_rate_list.pop(0)
+			job_id = item[0]
+			start_time = item[1][0]
+			end_time = item[1][1]
+			rate = item[1][2]
+			job_list.append((start_time, end_time, job_id))
+			if not sorted_failure_rate_list:
+				return None
+			item = sorted_failure_rate_list.pop(0)
+			job_id = item[0]
+			start_time = item[1][0]
+			end_time = item[1][1]
+			rate = item[1][2]
+			job_list.append((start_time, end_time, job_id))
+			if not sorted_failure_rate_list:
+				return None
+			item = sorted_failure_rate_list.pop(0)
+			job_id = item[0]
+			start_time = item[1][0]
+			end_time = item[1][1]
+			rate = item[1][2]
+			job_list.append((start_time, end_time, job_id))
+			match_job_dict[dataset] = job_list
+		return match_job_dict
+
+	def _do_min2copy_negotiate(self, availability_dict, failure_rate_dict):
+		match_job_dict = {}
+		sorted_failure_rate_list = sorted(failure_rate_dict.items(), key=lambda kv: kv[1][2])
+		for dataset in availability_dict:
+			job_list = []
+			if not sorted_failure_rate_list:
+				return None
+			item = sorted_failure_rate_list.pop(0)
+			job_id = item[0]
+			start_time = item[1][0]
+			end_time = item[1][1]
+			rate = item[1][2]
+			job_list.append((start_time, end_time, job_id))
+			if not sorted_failure_rate_list:
+				return None
+			item = sorted_failure_rate_list.pop(0)
+			job_id = item[0]
+			start_time = item[1][0]
+			end_time = item[1][1]
+			rate = item[1][2]
+			job_list.append((start_time, end_time, job_id))
+			match_job_dict[dataset] = job_list
+		return match_job_dict
+
+	def _do_min1copy_negotiate(self, availability_dict, failure_rate_dict):
+		match_job_dict = {}
+		sorted_failure_rate_list = sorted(failure_rate_dict.items(), key=lambda kv: kv[1][2])
+		for dataset in availability_dict:
+			job_list = []
+			if not sorted_failure_rate_list:
+				return None
+			item = sorted_failure_rate_list.pop(0)
+			job_id = item[0]
+			start_time = item[1][0]
+			end_time = item[1][1]
+			rate = item[1][2]
+			job_list.append((start_time, end_time, job_id))
 			match_job_dict[dataset] = job_list
 		return match_job_dict
 
